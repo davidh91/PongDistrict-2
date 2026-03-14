@@ -9,45 +9,50 @@ import { Trophy, History, PlusCircle, User } from "lucide-react";
 import { useState, useEffect } from "react";
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState("leaderboard"); // 'leaderboard' | 'history' | 'add' | 'profile' | 'login' | 'register'
   const [userProfile, setUserProfile] = useState(null);
 
-  const isAuthenticated = !!token;
-
+  // On mount, check if the browser already has a valid session cookie
   useEffect(() => {
-    if (token) {
-      localStorage.setItem("token", token);
-      // Fetch profile to get username
-      fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+    fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+      credentials: "include",
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setUserProfile(data);
+          setIsAuthenticated(true);
+        }
       })
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data) {
-            setUserProfile(data);
-          } else {
-            // Token might be invalid
-            handleLogout();
-          }
-        })
-        .catch(() => handleLogout());
-    } else {
-      localStorage.removeItem("token");
-      setUserProfile(null);
-    }
-  }, [token]);
+      .catch(() => {});
+  }, []);
 
   const handleLogout = () => {
-    setToken(null);
-    if (activeTab === "add" || activeTab === "profile") {
-      setActiveTab("leaderboard");
-    }
+    fetch(`${import.meta.env.VITE_API_URL}/logout`, {
+      method: "POST",
+      credentials: "include",
+    }).finally(() => {
+      setIsAuthenticated(false);
+      setUserProfile(null);
+      if (activeTab === "add" || activeTab === "profile") {
+        setActiveTab("leaderboard");
+      }
+    });
   };
 
-  const handleLogin = (newToken) => {
-    setToken(newToken);
-    setActiveTab("leaderboard");
+  const handleLogin = () => {
+    fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+      credentials: "include",
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setUserProfile(data);
+          setIsAuthenticated(true);
+          setActiveTab("leaderboard");
+        }
+      });
   };
 
   return (
@@ -143,11 +148,9 @@ function App() {
           {activeTab === "leaderboard" && <Leaderboard />}
           {activeTab === "history" && <MatchList />}
           {activeTab === "add" && isAuthenticated && (
-            <AddMatch token={token} currentUser={userProfile} />
+            <AddMatch currentUser={userProfile} />
           )}
-          {activeTab === "profile" && isAuthenticated && (
-            <Profile token={token} currentUser={userProfile} />
-          )}
+          {activeTab === "profile" && isAuthenticated && <Profile />}
           {activeTab === "login" && !isAuthenticated && (
             <Login
               onLogin={handleLogin}

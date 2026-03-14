@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   backend:
@@ -12,6 +12,9 @@ services:
       - ./backend/.env
     environment:
       - DATABASE_URL=sqlite:///./pongdistrict.db
+      - FRONTEND_ORIGINS=http://localhost:5173
+      - COOKIE_SECURE=false
+      - RATE_LIMIT_STORAGE_URI=memory://
     restart: always
 
   frontend:

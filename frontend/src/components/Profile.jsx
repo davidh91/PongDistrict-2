@@ -1,62 +1,75 @@
-import { useState, useEffect } from 'react'
-import { User, Mail, Save, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { User, Mail, Save, AlertCircle } from "lucide-react";
 
-export default function Profile({ token }) {
-  const [userProfile, setUserProfile] = useState(null)
-  const [username, setUsername] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(false)
+export default function Profile() {
+  const [userProfile, setUserProfile] = useState(null);
+  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (!token) return
     fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      credentials: "include",
     })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch profile')
-        return res.json()
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch profile");
+        return res.json();
       })
-      .then(data => {
-        setUserProfile(data)
-        setUsername(data.username)
-        setLoading(false)
+      .then((data) => {
+        setUserProfile(data);
+        setUsername(data.username);
+        setLoading(false);
       })
-      .catch(err => {
-        setError(err.message)
-        setLoading(false)
-      })
-  }, [token])
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
 
   const handleSave = async (e) => {
-    e.preventDefault()
-    if (!username.trim()) { setError("Username cannot be empty"); return }
-    setSaving(true)
-    setError(null)
-    setSuccess(false)
+    e.preventDefault();
+    if (!username.trim()) {
+      setError("Username cannot be empty");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    setSuccess(false);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ username })
-      })
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username }),
+      });
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.detail || "Failed to update profile")
+        const errorData = await res.json();
+        throw new Error(errorData.detail || "Failed to update profile");
       }
-      const updatedUser = await res.json()
-      setUserProfile(updatedUser)
-      setSuccess(true)
+      const updatedUser = await res.json();
+      setUserProfile(updatedUser);
+      setSuccess(true);
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
-  if (loading) return <div className="text-center py-10 text-stone-400 text-sm">Loading profile...</div>
-  if (!userProfile) return <div className="text-center py-10 text-red-600 text-sm">Failed to load profile.</div>
+  if (loading)
+    return (
+      <div className="text-center py-10 text-stone-400 text-sm">
+        Loading profile...
+      </div>
+    );
+  if (!userProfile)
+    return (
+      <div className="text-center py-10 text-red-600 text-sm">
+        Failed to load profile.
+      </div>
+    );
 
   return (
     <div className="max-w-sm mx-auto">
@@ -79,31 +92,48 @@ export default function Profile({ token }) {
 
       <form onSubmit={handleSave} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1.5">Email Address</label>
+          <label className="block text-sm font-medium text-stone-700 mb-1.5">
+            Email Address
+          </label>
           <div className="relative">
             <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
-            <input type="text" value={userProfile.email} disabled
-              className="w-full bg-stone-100 border border-stone-200 rounded-lg py-2 pl-9 pr-3 text-stone-500 text-sm cursor-not-allowed" />
+            <input
+              type="text"
+              value={userProfile.email}
+              disabled
+              className="w-full bg-stone-100 border border-stone-200 rounded-lg py-2 pl-9 pr-3 text-stone-500 text-sm cursor-not-allowed"
+            />
           </div>
-          <p className="text-xs text-stone-400 mt-1">Email cannot be changed.</p>
+          <p className="text-xs text-stone-400 mt-1">
+            Email cannot be changed.
+          </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1.5">Display Name</label>
+          <label className="block text-sm font-medium text-stone-700 mb-1.5">
+            Display Name
+          </label>
           <div className="relative">
             <User className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
-            <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full bg-white border border-stone-300 rounded-lg py-2 pl-9 pr-3 text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 transition-colors text-sm"
-              placeholder="Your username" />
+              placeholder="Your username"
+            />
           </div>
         </div>
 
-        <button type="submit" disabled={saving || username === userProfile.username}
-          className="w-full flex items-center justify-center gap-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-50 text-[#EFE4D2] font-medium py-2.5 px-4 rounded-lg transition-colors text-sm">
+        <button
+          type="submit"
+          disabled={saving || username === userProfile.username}
+          className="w-full flex items-center justify-center gap-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-50 text-[#EFE4D2] font-medium py-2.5 px-4 rounded-lg transition-colors text-sm"
+        >
           <Save className="w-4 h-4" />
-          {saving ? 'Saving...' : 'Save Profile'}
+          {saving ? "Saving..." : "Save Profile"}
         </button>
       </form>
     </div>
-  )
+  );
 }

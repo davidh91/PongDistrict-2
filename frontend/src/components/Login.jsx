@@ -20,6 +20,7 @@ export default function Login({ onLogin, onSwitchToRegister }) {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/token`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        credentials: "include",
         body: formData,
       });
 
@@ -28,8 +29,7 @@ export default function Login({ onLogin, onSwitchToRegister }) {
         throw new Error(errorData.detail || "Login failed");
       }
 
-      const data = await res.json();
-      onLogin(data.access_token);
+      onLogin();
     } catch (err) {
       setError(err.message);
     } finally {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { UserCheck, Swords } from "lucide-react";
 
-export default function AddMatch({ token, currentUser }) {
+export default function AddMatch({ currentUser }) {
   const [users, setUsers] = useState([]);
   const [opponentId, setOpponentId] = useState("");
   const [didIWin, setDidIWin] = useState(true);
@@ -38,8 +38,8 @@ export default function AddMatch({ token, currentUser }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(matchData),
       });
       if (!res.ok) throw new Error("Failed to record match");
