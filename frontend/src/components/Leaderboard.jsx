@@ -26,7 +26,8 @@ export default function Leaderboard() {
     );
 
   const topRankStyle = "bg-amber-100 text-amber-800 border border-amber-300";
-  const neutralRankStyle = "bg-stone-100 text-stone-500 border border-stone-200";
+  const neutralRankStyle =
+    "bg-stone-100 text-stone-500 border border-stone-200";
 
   return (
     <div>
