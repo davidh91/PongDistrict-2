@@ -27,7 +27,7 @@ This app was developed with LLM assistance.
 
 Primary model used:
 
-- Gemini (primarily via Antogravity)
+- Gemini (primarily via Google Antigravity)
 - GPT-5.3-Codex (secondary support via GitHub Copilot in VS Code)
 
 How it was used:
