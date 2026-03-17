@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AlertCircle } from "lucide-react";
+import { setCsrfToken } from "../utils/csrf";
 
 export default function Login({ onLogin, onSwitchToRegister }) {
   const [identifier, setIdentifier] = useState("");
@@ -28,6 +29,9 @@ export default function Login({ onLogin, onSwitchToRegister }) {
         const errorData = await res.json();
         throw new Error(errorData.detail || "Login failed");
       }
+
+      const data = await res.json();
+      setCsrfToken(data.csrf_token);
 
       onLogin();
     } catch (err) {

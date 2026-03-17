@@ -7,12 +7,29 @@ import Register from "./components/Register";
 import pingPongLogo from "./assets/ping-pong-logo.svg";
 import { Trophy, History, PlusCircle, User } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getCsrfTokenFromCookie } from "./utils/csrf";
+import {
+  clearCsrfToken,
+  getCsrfTokenFromCookie,
+  setCsrfToken,
+} from "./utils/csrf";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState("leaderboard"); // 'leaderboard' | 'history' | 'add' | 'profile' | 'login' | 'register'
   const [userProfile, setUserProfile] = useState(null);
+
+  const refreshCsrfToken = () => {
+    fetch(`${import.meta.env.VITE_API_URL}/csrf-token`, {
+      credentials: "include",
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.csrf_token) {
+          setCsrfToken(data.csrf_token);
+        }
+      })
+      .catch(() => {});
+  };
 
   // On mount, check if the browser already has a valid session cookie
   useEffect(() => {
@@ -24,6 +41,7 @@ function App() {
         if (data) {
           setUserProfile(data);
           setIsAuthenticated(true);
+          refreshCsrfToken();
         }
       })
       .catch(() => {});
@@ -36,6 +54,7 @@ function App() {
       headers: csrfToken ? { "X-CSRF-Token": csrfToken } : {},
       credentials: "include",
     }).finally(() => {
+      clearCsrfToken();
       setIsAuthenticated(false);
       setUserProfile(null);
       if (activeTab === "add" || activeTab === "profile") {
@@ -54,6 +73,7 @@ function App() {
           setUserProfile(data);
           setIsAuthenticated(true);
           setActiveTab("leaderboard");
+          refreshCsrfToken();
         }
       });
   };

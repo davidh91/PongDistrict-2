@@ -1,8 +1,14 @@
-export function getCsrfTokenFromCookie() {
-  const cookie = document.cookie
-    .split("; ")
-    .find((entry) => entry.startsWith("csrf_token="));
+const CSRF_STORAGE_KEY = "csrf_token";
 
-  if (!cookie) return null;
-  return decodeURIComponent(cookie.split("=")[1] || "");
+export function getCsrfTokenFromCookie() {
+  return window.localStorage.getItem(CSRF_STORAGE_KEY);
+}
+
+export function setCsrfToken(token) {
+  if (!token) return;
+  window.localStorage.setItem(CSRF_STORAGE_KEY, token);
+}
+
+export function clearCsrfToken() {
+  window.localStorage.removeItem(CSRF_STORAGE_KEY);
 }

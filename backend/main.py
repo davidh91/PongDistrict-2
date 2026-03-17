@@ -191,7 +191,7 @@ def login_for_access_token(
         samesite=COOKIE_SAMESITE,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
-    return {"message": "Login successful"}
+    return {"message": "Login successful", "csrf_token": csrf_token}
 
 
 @app.post("/logout")
@@ -209,6 +209,20 @@ def read_current_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+@app.get("/csrf-token")
+def issue_csrf_token(response: Response, _: str = Depends(get_current_user_id)):
+    csrf_token = secrets.token_urlsafe(32)
+    response.set_cookie(
+        key="csrf_token",
+        value=csrf_token,
+        httponly=False,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+    return {"csrf_token": csrf_token}
 
 
 @app.put("/users/me", response_model=schemas.User)
