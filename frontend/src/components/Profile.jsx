@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, Mail, Save, AlertCircle } from "lucide-react";
+import { getCsrfTokenFromCookie } from "../utils/csrf";
 
 export default function Profile() {
   const [userProfile, setUserProfile] = useState(null);
@@ -38,9 +39,13 @@ export default function Profile() {
     setError(null);
     setSuccess(false);
     try {
+      const csrfToken = getCsrfTokenFromCookie();
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+        },
         credentials: "include",
         body: JSON.stringify({ username }),
       });

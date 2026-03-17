@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { UserCheck, Swords } from "lucide-react";
+import { getCsrfTokenFromCookie } from "../utils/csrf";
 
 export default function AddMatch({ currentUser }) {
   const [users, setUsers] = useState([]);
@@ -34,10 +35,12 @@ export default function AddMatch({ currentUser }) {
     };
 
     try {
+      const csrfToken = getCsrfTokenFromCookie();
       const res = await fetch(`${import.meta.env.VITE_API_URL}/matches`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
         },
         credentials: "include",
         body: JSON.stringify(matchData),

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from typing import List
 import os
 import re
+import secrets
 import uuid
 
 import elo
@@ -48,6 +49,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _validate_origin(request: Request) -> None:
+    # Enforce exact origin allow-list on state-changing requests.
+    origin = request.headers.get("origin")
+    if not origin or origin not in FRONTEND_ORIGINS:
+        raise HTTPException(status_code=403, detail="Origin not allowed")
+
+
+def _validate_csrf(request: Request) -> None:
+    csrf_cookie = request.cookies.get("csrf_token")
+    csrf_header = request.headers.get("x-csrf-token")
+    if not csrf_cookie or not csrf_header:
+        raise HTTPException(status_code=403, detail="CSRF token missing")
+    if not secrets.compare_digest(csrf_cookie, csrf_header):
+        raise HTTPException(status_code=403, detail="CSRF token invalid")
+
+
+def require_csrf(request: Request) -> None:
+    _validate_origin(request)
+    _validate_csrf(request)
 
 
 @app.get("/leaderboard", response_model=List[schemas.PublicUser])
@@ -152,6 +174,7 @@ def login_for_access_token(
     access_token = create_access_token(
         data={"sub": user.id}, expires_delta=access_token_expires
     )
+    csrf_token = secrets.token_urlsafe(32)
     response.set_cookie(
         key="access_token",
         value=access_token,
@@ -160,12 +183,21 @@ def login_for_access_token(
         samesite=COOKIE_SAMESITE,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
+    response.set_cookie(
+        key="csrf_token",
+        value=csrf_token,
+        httponly=False,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
     return {"message": "Login successful"}
 
 
 @app.post("/logout")
-def logout(response: Response):
+def logout(response: Response, _: None = Depends(require_csrf)):
     response.delete_cookie("access_token")
+    response.delete_cookie("csrf_token")
     return {"message": "Logged out"}
 
 
@@ -182,6 +214,7 @@ def read_current_user(
 @app.put("/users/me", response_model=schemas.User)
 def update_user(
     update_data: schemas.UserUpdate,
+    _: None = Depends(require_csrf),
     user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
@@ -206,6 +239,7 @@ def update_user(
 @app.post("/matches", response_model=schemas.Match)
 def record_match(
     match: schemas.MatchCreate,
+    _: None = Depends(require_csrf),
     user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):

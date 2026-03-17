@@ -7,6 +7,7 @@ import Register from "./components/Register";
 import pingPongLogo from "./assets/ping-pong-logo.svg";
 import { Trophy, History, PlusCircle, User } from "lucide-react";
 import { useState, useEffect } from "react";
+import { getCsrfTokenFromCookie } from "./utils/csrf";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -29,8 +30,10 @@ function App() {
   }, []);
 
   const handleLogout = () => {
+    const csrfToken = getCsrfTokenFromCookie();
     fetch(`${import.meta.env.VITE_API_URL}/logout`, {
       method: "POST",
+      headers: csrfToken ? { "X-CSRF-Token": csrfToken } : {},
       credentials: "include",
     }).finally(() => {
       setIsAuthenticated(false);
